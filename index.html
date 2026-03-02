@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NPS API Field Explorer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; }
+    .header { background: #1a1a2e; padding: 2rem; border-bottom: 2px solid #16213e; }
+    .header h1 { font-size: 1.8rem; color: #fff; }
+    .header p { color: #888; margin-top: 0.5rem; }
+    .header .base-url { color: #4ecca3; font-family: monospace; font-size: 0.95rem; margin-top: 0.5rem; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .stat { background: #1a1a2e; border: 1px solid #16213e; border-radius: 8px; padding: 1rem 1.5rem; flex: 1; min-width: 150px; }
+    .stat .num { font-size: 1.5rem; font-weight: 700; color: #4ecca3; }
+    .stat .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+    .endpoint { background: #111; border: 1px solid #222; border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
+    .endpoint-header { padding: 1rem 1.5rem; background: #1a1a2e; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .endpoint-header:hover { background: #1f1f3a; }
+    .endpoint-header h2 { font-size: 1.1rem; color: #fff; }
+    .endpoint-header .method { background: #4ecca3; color: #000; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; margin-right: 0.75rem; }
+    .endpoint-header .path { font-family: monospace; color: #4ecca3; font-size: 0.9rem; }
+    .endpoint-header .count { color: #888; font-size: 0.85rem; }
+    .endpoint-header .total { background: #16213e; color: #4ecca3; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; margin-left: 0.75rem; }
+    .endpoint-header .arrow { color: #4ecca3; transition: transform 0.2s; }
+    .endpoint-header.open .arrow { transform: rotate(90deg); }
+    .endpoint-body { display: none; padding: 1.5rem; border-top: 1px solid #222; }
+    .endpoint-body.open { display: block; }
+    .field-table { width: 100%; border-collapse: collapse; }
+    .field-table th { text-align: left; padding: 0.5rem 1rem; color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #222; }
+    .field-table td { padding: 0.5rem 1rem; border-bottom: 1px solid #1a1a1a; font-size: 0.9rem; vertical-align: top; }
+    .field-table tr:hover { background: #1a1a1a; }
+    .field-name { font-family: monospace; color: #e8a87c; }
+    .field-type { font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+    .type-string { background: #1a3a2a; color: #4ecca3; }
+    .type-number { background: #3a2a1a; color: #e8a87c; }
+    .type-array { background: #1a2a3a; color: #6ec8e8; }
+    .type-object { background: #2a1a3a; color: #c86ee8; }
+    .type-boolean { background: #3a1a1a; color: #e86e6e; }
+    .type-null { background: #2a2a2a; color: #888; }
+    .nested { margin-left: 1.5rem; border-left: 2px solid #222; padding-left: 1rem; margin-top: 0.25rem; }
+    .nested .field-name { color: #c8a87c; }
+    .sample { color: #666; font-size: 0.8rem; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; }
+    .nav { position: sticky; top: 0; background: #0d0d1a; z-index: 10; padding: 0.75rem 2rem; border-bottom: 1px solid #16213e; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .nav a { color: #4ecca3; text-decoration: none; font-size: 0.8rem; padding: 4px 10px; border: 1px solid #16213e; border-radius: 4px; }
+    .nav a:hover { background: #16213e; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>NPS API Field Explorer</h1>
+    <p>Complete field reference for the National Park Service Developer API</p>
+    <div class="base-url">Base URL: https://developer.nps.gov/api/v1/</div>
+  </div>
+  <nav class="nav" id="nav"></nav>
+  <div class="container">
+    <div class="stats" id="stats"></div>
+    <div id="endpoints"></div>
+  </div>
+
+  <script>
+    const API_KEY = 'KP9RcuYwrXChb1fP63DggHY7yKaT9JiJ1V7rpWLt';
+    const BASE = 'https://developer.nps.gov/api/v1';
+
+    const endpoints = [
+      { name: 'Parks', path: '/parks', desc: 'Info about national parks including locations, hours, fees, images' },
+      { name: 'Alerts', path: '/alerts', desc: 'Current alerts and closures for parks' },
+      { name: 'Activities', path: '/activities', desc: 'Activity categories available across parks' },
+      { name: 'Amenities', path: '/amenities', desc: 'Amenity types available at parks' },
+      { name: 'Articles', path: '/articles', desc: 'NPS articles and educational content' },
+      { name: 'Campgrounds', path: '/campgrounds', desc: 'Campground info including sites, fees, amenities' },
+      { name: 'Events', path: '/events', desc: 'Park events, programs, and closures' },
+      { name: 'Lesson Plans', path: '/lessonplans', desc: 'Educational lesson plans for teachers' },
+      { name: 'News Releases', path: '/newsreleases', desc: 'Press releases and news from NPS' },
+      { name: 'People', path: '/people', desc: 'Historical people associated with parks' },
+      { name: 'Places', path: '/places', desc: 'Significant places and landmarks' },
+      { name: 'Things To Do', path: '/thingstodo', desc: 'Activities and experiences at parks' },
+      { name: 'Tours', path: '/tours', desc: 'Guided and self-guided tours' },
+      { name: 'Visitor Centers', path: '/visitorcenters', desc: 'Visitor center locations and info' },
+    ];
+
+    function getType(val) {
+      if (val === null) return 'null';
+      if (Array.isArray(val)) return 'array';
+      return typeof val;
+    }
+
+    function flattenFields(obj, prefix = '') {
+      const fields = [];
+      if (!obj || typeof obj !== 'object') return fields;
+
+      for (const [key, val] of Object.entries(obj)) {
+        const path = prefix ? `${prefix}.${key}` : key;
+        const type = getType(val);
+
+        let sample = '';
+        let children = [];
+
+        if (type === 'string') {
+          sample = val.length > 80 ? val.slice(0, 80) + '...' : val;
+        } else if (type === 'number') {
+          sample = String(val);
+        } else if (type === 'boolean') {
+          sample = String(val);
+        } else if (type === 'array' && val.length > 0) {
+          const first = val[0];
+          if (typeof first === 'object' && first !== null) {
+            children = flattenFields(first, path + '[]');
+            sample = `Array of ${val.length} object(s)`;
+          } else {
+            sample = `[${val.slice(0, 3).map(v => JSON.stringify(v)).join(', ')}${val.length > 3 ? ', ...' : ''}]`;
+          }
+        } else if (type === 'object') {
+          children = flattenFields(val, path);
+          sample = `{${Object.keys(val).length} fields}`;
+        }
+
+        fields.push({ key, path, type, sample, children, depth: prefix.split('.').filter(Boolean).length });
+      }
+      return fields;
+    }
+
+    function renderFields(fields, depth = 0) {
+      let html = '';
+      for (const f of fields) {
+        const indent = depth * 20;
+        html += `<tr>
+          <td><span class="field-name" style="padding-left:${indent}px">${depth > 0 ? '└ ' : ''}${f.key}</span></td>
+          <td><span class="field-type type-${f.type}">${f.type}</span></td>
+          <td class="sample" title="${f.sample.replace(/"/g, '&quot;')}">${f.sample.replace(/</g, '&lt;')}</td>
+        </tr>`;
+        if (f.children.length > 0) {
+          html += renderFields(f.children, depth + 1);
+        }
+      }
+      return html;
+    }
+
+    async function fetchEndpoint(ep) {
+      try {
+        const res = await fetch(`${BASE}${ep.path}?limit=1&api_key=${API_KEY}`);
+        const json = await res.json();
+        return json;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function init() {
+      const navEl = document.getElementById('nav');
+      const statsEl = document.getElementById('stats');
+      const container = document.getElementById('endpoints');
+
+      // Build nav
+      navEl.innerHTML = endpoints.map(ep =>
+        `<a href="#${ep.name.toLowerCase().replace(/\s+/g, '-')}">${ep.name}</a>`
+      ).join('');
+
+      // Fetch all
+      const results = await Promise.all(endpoints.map(async (ep) => {
+        const json = await fetchEndpoint(ep);
+        return { ...ep, json };
+      }));
+
+      // Stats
+      const totalEndpoints = results.length;
+      const totalRecords = results.reduce((sum, r) => sum + (r.json ? parseInt(r.json.total || r.json.pagesize || '0') : 0), 0);
+      statsEl.innerHTML = `
+        <div class="stat"><div class="num">${totalEndpoints}</div><div class="label">Endpoints</div></div>
+        <div class="stat"><div class="num">${totalRecords.toLocaleString()}</div><div class="label">Total Records</div></div>
+        <div class="stat"><div class="num">v1</div><div class="label">API Version</div></div>
+        <div class="stat"><div class="num">REST</div><div class="label">Protocol</div></div>
+      `;
+
+      // Render endpoints
+      for (const r of results) {
+        const id = r.name.toLowerCase().replace(/\s+/g, '-');
+        const total = r.json ? (r.json.total || r.json.pagesize || '?') : '?';
+        let fieldsHtml = '';
+        let fieldCount = 0;
+
+        if (r.json && r.json.data && r.json.data.length > 0) {
+          const fields = flattenFields(r.json.data[0]);
+          fieldCount = fields.length;
+          fieldsHtml = `
+            <p style="color:#888;font-size:0.85rem;margin-bottom:1rem">${r.desc}</p>
+            <table class="field-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Sample Value</th></tr></thead>
+              <tbody>${renderFields(fields)}</tbody>
+            </table>`;
+        } else {
+          fieldsHtml = '<p style="color:#666">Failed to load or no data available</p>';
+        }
+
+        container.innerHTML += `
+          <div class="endpoint" id="${id}">
+            <div class="endpoint-header" onclick="toggle(this)">
+              <div style="display:flex;align-items:center">
+                <span class="method">GET</span>
+                <span class="path">${r.path}</span>
+                <span class="total">${parseInt(total).toLocaleString()} records</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:1rem">
+                <span class="count">${fieldCount} fields</span>
+                <span class="arrow">▶</span>
+              </div>
+            </div>
+            <div class="endpoint-body">${fieldsHtml}</div>
+          </div>`;
+      }
+    }
+
+    function toggle(header) {
+      header.classList.toggle('open');
+      header.nextElementSibling.classList.toggle('open');
+    }
+
+    init();
+  </script>
+</body>
+</html>
