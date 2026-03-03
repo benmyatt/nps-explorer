@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import { getParkByCode } from "@/lib/nps";
 import { getDesignationColors } from "@/lib/designation-colors";
 import ParkGallery from "@/components/ParkGallery";

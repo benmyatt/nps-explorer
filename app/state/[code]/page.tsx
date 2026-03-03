@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import { getParksByState, parksToMarkers, fetchAlertsByState } from "@/lib/nps";
 import { getStateName, STATE_NAMES } from "@/lib/states";
 import StateMap from "@/components/StateMap";
