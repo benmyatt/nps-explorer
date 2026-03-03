@@ -2,7 +2,6 @@ import { getParkByCode } from "@/lib/nps";
 import { getDesignationColors } from "@/lib/designation-colors";
 import ParkGallery from "@/components/ParkGallery";
 import BackLink from "@/components/BackLink";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 interface Props {

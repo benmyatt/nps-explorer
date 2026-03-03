@@ -120,7 +120,8 @@ export default function StateMap({ stateCode, parkMarkers }: Props) {
       >
         <Geographies geography={GEO_URL}>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {({ geographies }: any) =>
+          {({ geographies }: { geographies: any[] }) =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             geographies.map((geo: any) => {
               const code = FIPS_TO_STATE[geo.id];
               const isActive = code === stateCode;

@@ -26,7 +26,7 @@ interface Props {
   heroImage: string | null;
 }
 
-export default function ParksGrid({ parks, states, activities, totalCount, heroImage }: Props) {
+export default function ParksGrid({ parks, states, activities, heroImage }: Props) {
   const [query, setQuery] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [selectedDesignation, setSelectedDesignation] = useState("");
@@ -45,7 +45,7 @@ export default function ParksGrid({ parks, states, activities, totalCount, heroI
   const hasFilters = query || selectedState || selectedDesignation || selectedActivity;
   const [hoveredLetter, setHoveredLetter] = useState<string | null>(null);
 
-  const lettersWithParks = useMemo(() => {
+  const _lettersWithParks = useMemo(() => {
     const set = new Set<string>();
     for (const p of filtered) {
       const first = p.fullName[0]?.toUpperCase();

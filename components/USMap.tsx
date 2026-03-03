@@ -83,7 +83,8 @@ export default function USMap({ parkMarkers }: Props) {
       >
         <Geographies geography={GEO_URL}>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {({ geographies }: any) =>
+          {({ geographies }: { geographies: any[] }) =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             geographies.map((geo: any) => {
               const stateCode = FIPS_TO_STATE[geo.id];
               return (
