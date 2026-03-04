@@ -1,4 +1,4 @@
-import { getAllParks } from "@/lib/nps";
+import { getAllParks } from "@/lib/data";
 import type { Metadata } from "next";
 import ParksGrid from "./ParksGrid";
 
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ParksPage() {
-  const parks = await getAllParks();
+  const parks = getAllParks();
 
   const parkData = parks
     .sort((a, b) => a.fullName.localeCompare(b.fullName))

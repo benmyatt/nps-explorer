@@ -1,3 +1,14 @@
+export const LEGEND_ITEMS = [
+  { label: "National Park", plural: "National Parks", color: "#34d399", key: "park" },
+  { label: "Monument", plural: "National Monuments", color: "#fbbf24", key: "monument" },
+  { label: "Historic", plural: "National Historic Parks", color: "#c084fc", key: "historic" },
+  { label: "Memorial / Battlefield", plural: "National Memorials & Battlefields", color: "#fb7185", key: "memorial" },
+  { label: "Seashore / River", plural: "National Seashores & Rivers", color: "#22d3ee", key: "water" },
+  { label: "Recreation / Preserve", plural: "National Recreation Areas & Preserves", color: "#2563eb", key: "recreation" },
+  { label: "Parkway", plural: "National Parkways", color: "#fb923c", key: "parkway" },
+  { label: "Other", plural: "Other Designations", color: "#94a3b8", key: "other" },
+];
+
 // Maps park designation to a color theme
 // Each returns [text color, bg color] for badges
 
@@ -45,12 +56,12 @@ const DESIGNATION_COLORS: Record<string, [string, string]> = {
   "National Recreational River": ["text-cyan-400", "bg-cyan-400/10"],
   "National River & Recreation Area": ["text-cyan-400", "bg-cyan-400/10"],
 
-  // Sky — Recreation Areas & Preserves
-  "National Recreation Area": ["text-sky-400", "bg-sky-400/10"],
-  "National Preserve": ["text-sky-400", "bg-sky-400/10"],
-  "National Reserve": ["text-sky-400", "bg-sky-400/10"],
-  "Ecological & Historic Preserve": ["text-sky-400", "bg-sky-400/10"],
-  "International Park": ["text-sky-400", "bg-sky-400/10"],
+  // Dark Blue — Recreation Areas & Preserves
+  "National Recreation Area": ["text-blue-400", "bg-blue-400/10"],
+  "National Preserve": ["text-blue-400", "bg-blue-400/10"],
+  "National Reserve": ["text-blue-400", "bg-blue-400/10"],
+  "Ecological & Historic Preserve": ["text-blue-400", "bg-blue-400/10"],
+  "International Park": ["text-blue-400", "bg-blue-400/10"],
 
   // Orange — Parkways
   "Parkway": ["text-orange-400", "bg-orange-400/10"],
@@ -97,11 +108,11 @@ const DESIGNATION_HEX: Record<string, string> = {
   "Scenic & Recreational River": "#22d3ee",
   "National Recreational River": "#22d3ee",
   "National River & Recreation Area": "#22d3ee",
-  "National Recreation Area": "#38bdf8",
-  "National Preserve": "#38bdf8",
-  "National Reserve": "#38bdf8",
-  "Ecological & Historic Preserve": "#38bdf8",
-  "International Park": "#38bdf8",
+  "National Recreation Area": "#2563eb",
+  "National Preserve": "#2563eb",
+  "National Reserve": "#2563eb",
+  "Ecological & Historic Preserve": "#2563eb",
+  "International Park": "#2563eb",
   "Parkway": "#fb923c",
 };
 

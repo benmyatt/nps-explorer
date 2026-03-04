@@ -11,13 +11,14 @@ import { feature } from "topojson-client";
 import { useRouter } from "next/navigation";
 import { FIPS_TO_STATE } from "@/lib/states";
 import { getDesignationHex } from "@/lib/designation-colors";
-import type { ParkMarker } from "@/lib/nps";
+import type { ParkMarker, CampgroundMarker } from "@/lib/nps";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
 interface Props {
   stateCode: string;
   parkMarkers: ParkMarker[];
+  campgroundMarkers?: CampgroundMarker[];
 }
 
 // Reverse lookup: state code -> FIPS
@@ -26,7 +27,7 @@ Object.entries(FIPS_TO_STATE).forEach(([fips, code]) => {
   STATE_TO_FIPS[code] = fips;
 });
 
-export default function StateMap({ stateCode, parkMarkers }: Props) {
+export default function StateMap({ stateCode, parkMarkers, campgroundMarkers = [] }: Props) {
   const router = useRouter();
   const [tooltip, setTooltip] = useState<{
     content: string;
@@ -38,10 +39,6 @@ export default function StateMap({ stateCode, parkMarkers }: Props) {
   const [stateGeo, setStateGeo] = useState<any>(null);
 
   useEffect(() => setMounted(true), []);
-
-  useEffect(() => {
-    parkMarkers.forEach((p) => router.prefetch(`/park/${p.parkCode}`));
-  }, [router, parkMarkers]);
 
   // Fetch TopoJSON and extract state feature for bounds calculation
   useEffect(() => {
@@ -98,6 +95,20 @@ export default function StateMap({ stateCode, parkMarkers }: Props) {
             .filter(Boolean) as (ParkMarker & { x: number; y: number })[])
         : [],
     [parkMarkers, mounted, projection]
+  );
+
+  const projectedCampgrounds = useMemo(
+    () =>
+      mounted
+        ? (campgroundMarkers
+            .map((cg) => {
+              const coords = projection([cg.lng, cg.lat]);
+              if (!coords) return null;
+              return { ...cg, x: coords[0], y: coords[1] };
+            })
+            .filter(Boolean) as (CampgroundMarker & { x: number; y: number })[])
+        : [],
+    [campgroundMarkers, mounted, projection]
   );
 
   const handleMouseMove = useCallback(
@@ -161,6 +172,7 @@ export default function StateMap({ stateCode, parkMarkers }: Props) {
                 key={park.parkCode}
                 transform={`translate(${park.x}, ${park.y})`}
                 onClick={() => router.push(`/park/${park.parkCode}`)}
+                onMouseEnter={() => router.prefetch(`/park/${park.parkCode}`)}
                 onMouseMove={(e) => handleMouseMove(e, park.name)}
                 onMouseLeave={handleMouseLeave}
                 className="cursor-pointer"
@@ -182,6 +194,35 @@ export default function StateMap({ stateCode, parkMarkers }: Props) {
               </g>
             );
           })}
+        </g>
+
+        <g>
+          {projectedCampgrounds.map((cg) => (
+            <g
+              key={cg.id}
+              transform={`translate(${cg.x}, ${cg.y})`}
+              onClick={() => router.push(`/campground/${cg.id}`)}
+              onMouseEnter={() => router.prefetch(`/campground/${cg.id}`)}
+              onMouseMove={(e) => handleMouseMove(e, cg.name)}
+              onMouseLeave={handleMouseLeave}
+              className="cursor-pointer"
+            >
+              <circle
+                r={6}
+                fill="#94a3b8"
+                opacity={0.2}
+                className="park-dot-pulse"
+              />
+              <circle
+                r={4}
+                fill="#94a3b8"
+                stroke="#0a0f0d"
+                strokeWidth={1}
+                className="transition-all duration-200 hover:scale-[1.5]"
+                style={{ filter: "drop-shadow(0 0 4px #ffffff66)" }}
+              />
+            </g>
+          ))}
         </g>
       </ComposableMap>
 

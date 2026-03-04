@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import Image from "next/image";
 import ParkCard from "@/components/ParkCard";
 import { STATE_NAMES } from "@/lib/states";
 import { getDesignationGroup } from "@/lib/designation-colors";
@@ -42,6 +43,16 @@ export default function ParksGrid({ parks, states, activities, heroImage }: Prop
     });
   }, [parks, query, selectedState, selectedDesignation, selectedActivity]);
 
+
+  const INITIAL_COUNT = 60;
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+
+  // Load the rest after initial render
+  useEffect(() => {
+    const timer = setTimeout(() => setVisibleCount(Infinity), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const hasFilters = query || selectedState || selectedDesignation || selectedActivity;
   const [hoveredLetter, setHoveredLetter] = useState<string | null>(null);
 
@@ -71,11 +82,13 @@ export default function ParksGrid({ parks, states, activities, heroImage }: Prop
       {/* Hero */}
       <div className="relative overflow-hidden">
         {heroImage && (
-          <img
+          <Image
             src={heroImage}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover"
+            fill
+            className="object-cover"
             style={{ objectPosition: "center 60%" }}
+            priority
           />
         )}
         <div className="absolute inset-0 bg-[var(--color-bg)]/50" />
@@ -89,21 +102,12 @@ export default function ParksGrid({ parks, states, activities, heroImage }: Prop
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             {/* Search */}
             <div className="relative sm:col-span-2">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
               <input
                 type="text"
                 placeholder="Search parks..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--color-bg)]/80 backdrop-blur border border-white/10 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-dim)] text-sm"
+                className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-bg)]/80 backdrop-blur border border-white/10 text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-dim)] text-sm"
               />
             </div>
 
@@ -261,10 +265,10 @@ export default function ParksGrid({ parks, states, activities, heroImage }: Prop
             {/* Grid */}
             <div className="flex-1 min-w-0">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filtered.map((p, i) => {
+                {filtered.slice(0, visibleCount).map((p, i) => {
                   const firstLetter = p.fullName[0]?.toUpperCase();
                   const isFirstOfLetter =
-                    i === 0 || filtered[i - 1].fullName[0]?.toUpperCase() !== firstLetter;
+                    i === 0 || filtered[i - 1]?.fullName[0]?.toUpperCase() !== firstLetter;
                   return (
                     <div key={p.parkCode} id={isFirstOfLetter ? `park-letter-${firstLetter}` : undefined} className="scroll-mt-24 h-[340px]">
                       <ParkCard

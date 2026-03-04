@@ -41,7 +41,7 @@ export default function ParkGallery({ images }: Props) {
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+        <div className="flex gap-2 overflow-x-auto p-1 pb-2 scrollbar-thin">
           {images.map((img, i) => (
             <button
               key={i}

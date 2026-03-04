@@ -10,7 +10,7 @@ import { geoAlbersUsa } from "d3-geo";
 import { useRouter } from "next/navigation";
 import { FIPS_TO_STATE } from "@/lib/states";
 import { getDesignationHex } from "@/lib/designation-colors";
-import type { ParkMarker } from "@/lib/nps";
+import type { ParkMarker, CampgroundMarker } from "@/lib/nps";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
@@ -19,9 +19,11 @@ const projection = geoAlbersUsa().scale(1000).translate([400, 300]);
 
 interface Props {
   parkMarkers: ParkMarker[];
+  campgroundMarkers?: CampgroundMarker[];
+  mode?: "parks" | "campgrounds";
 }
 
-export default function USMap({ parkMarkers }: Props) {
+export default function USMap({ parkMarkers, campgroundMarkers = [], mode = "parks" }: Props) {
   const router = useRouter();
   const [tooltip, setTooltip] = useState<{
     content: string;
@@ -29,21 +31,15 @@ export default function USMap({ parkMarkers }: Props) {
     y: number;
   } | null>(null);
 
-  // Eagerly prefetch all state + park routes on mount
-  useEffect(() => {
-    const stateCodes = new Set(Object.values(FIPS_TO_STATE));
-    stateCodes.forEach((code) => router.prefetch(`/state/${code}`));
-    parkMarkers.forEach((p) => router.prefetch(`/park/${p.parkCode}`));
-  }, [router, parkMarkers]);
-
   const handleStateClick = useCallback(
     (geo: { id: string }) => {
       const stateCode = FIPS_TO_STATE[geo.id];
       if (stateCode) {
-        router.push(`/state/${stateCode}`);
+        const url = mode === "campgrounds" ? `/state/${stateCode}?view=campgrounds` : `/state/${stateCode}`;
+        router.push(url);
       }
     },
-    [router]
+    [router, mode]
   );
 
   const handleMouseMove = useCallback(
@@ -74,6 +70,20 @@ export default function USMap({ parkMarkers }: Props) {
     [parkMarkers, mounted]
   );
 
+  const projectedCampgrounds = useMemo(
+    () =>
+      mounted
+        ? (campgroundMarkers
+            .map((cg) => {
+              const coords = projection([cg.lng, cg.lat]);
+              if (!coords) return null;
+              return { ...cg, x: coords[0], y: coords[1] };
+            })
+            .filter(Boolean) as (CampgroundMarker & { x: number; y: number })[])
+        : [],
+    [campgroundMarkers, mounted]
+  );
+
   return (
     <div className="relative w-full h-full">
       <ComposableMap
@@ -96,6 +106,9 @@ export default function USMap({ parkMarkers }: Props) {
                     const name =
                       geo.properties.name || stateCode || "Unknown";
                     handleMouseMove(e, name);
+                  }}
+                  onMouseEnter={() => {
+                    if (stateCode) router.prefetch(`/state/${stateCode}`);
                   }}
                   onMouseLeave={handleMouseLeave}
                   style={{
@@ -135,6 +148,7 @@ export default function USMap({ parkMarkers }: Props) {
                 key={park.parkCode}
                 transform={`translate(${park.x}, ${park.y})`}
                 onClick={() => router.push(`/park/${park.parkCode}`)}
+                onMouseEnter={() => router.prefetch(`/park/${park.parkCode}`)}
                 onMouseMove={(e) => handleMouseMove(e, park.name)}
                 onMouseLeave={handleMouseLeave}
                 className="cursor-pointer"
@@ -155,6 +169,34 @@ export default function USMap({ parkMarkers }: Props) {
               </g>
             );
           })}
+        </g>
+
+        <g>
+          {projectedCampgrounds.map((cg) => (
+            <g
+              key={cg.id}
+              transform={`translate(${cg.x}, ${cg.y})`}
+              onClick={() => router.push(`/campground/${cg.id}`)}
+              onMouseEnter={() => router.prefetch(`/campground/${cg.id}`)}
+              onMouseMove={(e) => handleMouseMove(e, cg.name)}
+              onMouseLeave={handleMouseLeave}
+              className="cursor-pointer"
+            >
+              <circle
+                r={2}
+                fill="#ffffff"
+                opacity={0.3}
+                className="park-dot-pulse"
+              />
+              <circle
+                r={2}
+                fill="#ffffff"
+                stroke="#0a0f0d"
+                strokeWidth={0.5}
+                className="transition-transform duration-200 hover:scale-[2]"
+              />
+            </g>
+          ))}
         </g>
       </ComposableMap>
 

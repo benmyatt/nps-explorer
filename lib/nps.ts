@@ -94,9 +94,17 @@ async function fetchNPS<T>(
     url.searchParams.set(key, value);
   }
 
-  const res = await fetch(url.toString(), { next: { revalidate: 86400 } });
-  if (!res.ok) {
-    throw new Error(`NPS API error: ${res.status} ${res.statusText}`);
+  let res: Response | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(url.toString(), { next: { revalidate: 86400 } });
+    if (res.status === 429) {
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      continue;
+    }
+    break;
+  }
+  if (!res || !res.ok) {
+    throw new Error(`NPS API error: ${res?.status} ${res?.statusText}`);
   }
 
   const json: NPSResponse<T> = await res.json();
@@ -162,6 +170,10 @@ export async function fetchAlertsByState(stateCode: string): Promise<NPSAlert[]>
   return fetchNPS<NPSAlert>("alerts", { stateCode: stateCode.toUpperCase(), limit: "100" });
 }
 
+export async function fetchAlertsByPark(parkCode: string): Promise<NPSAlert[]> {
+  return fetchNPS<NPSAlert>("alerts", { parkCode, limit: "50" });
+}
+
 // News Releases
 export interface NPSNewsRelease {
   id: string;
@@ -175,7 +187,11 @@ export interface NPSNewsRelease {
 }
 
 export async function fetchNewsReleases(): Promise<NPSNewsRelease[]> {
-  return fetchNPS<NPSNewsRelease>("newsreleases", { limit: "100" });
+  return fetchNPS<NPSNewsRelease>("newsreleases", { limit: "500" });
+}
+
+export async function fetchNewsByPark(parkCode: string): Promise<NPSNewsRelease[]> {
+  return fetchNPS<NPSNewsRelease>("newsreleases", { parkCode, limit: "50" });
 }
 
 // Events
@@ -228,6 +244,73 @@ export interface LessonPlan {
 
 export async function fetchLessonPlans(): Promise<LessonPlan[]> {
   return fetchNPS<LessonPlan>("lessonplans", { limit: "50" });
+}
+
+export async function getParkImageMap(): Promise<Map<string, string>> {
+  const parks = await getAllParks();
+  const map = new Map<string, string>();
+  for (const p of parks) {
+    if (p.images[0]?.url) map.set(p.parkCode, p.images[0].url);
+  }
+  return map;
+}
+
+// Campgrounds
+export interface Campground {
+  id: string;
+  name: string;
+  parkCode: string;
+  description: string;
+  latitude: string;
+  longitude: string;
+  images: ParkImage[];
+  addresses: ParkAddress[];
+  contacts: ParkContacts;
+  fees: { cost: string; description: string; title: string }[];
+  operatingHours: ParkOperatingHours[];
+  campsites: {
+    totalSites: string;
+    tentOnly: string;
+    electricalHookups: string;
+    rvOnly: string;
+    walkBoatTo: string;
+    group: string;
+    horse: string;
+    other: string;
+  };
+  amenities: Record<string, string>;
+  accessibility: Record<string, string>;
+  reservationInfo: string;
+  reservationUrl: string;
+  directionsOverview: string;
+  weatherOverview: string;
+  url: string;
+}
+
+export interface CampgroundMarker {
+  id: string;
+  name: string;
+  parkCode: string;
+  lat: number;
+  lng: number;
+  stateCode: string;
+  totalSites: string;
+  imageUrl: string | null;
+}
+
+export function campgroundsToMarkers(campgrounds: Campground[]): CampgroundMarker[] {
+  return campgrounds
+    .filter((c) => c.latitude && c.longitude && parseFloat(c.latitude) !== 0)
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      parkCode: c.parkCode,
+      lat: parseFloat(c.latitude),
+      lng: parseFloat(c.longitude),
+      stateCode: c.addresses?.[0]?.stateCode || "",
+      totalSites: c.campsites?.totalSites || "0",
+      imageUrl: c.images?.[0]?.url ?? null,
+    }));
 }
 
 export function parksToMarkers(parks: Park[]): ParkMarker[] {

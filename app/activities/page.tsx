@@ -1,4 +1,4 @@
-import { fetchActivitiesParks } from "@/lib/nps";
+import { getActivitiesParks } from "@/lib/data";
 import type { Metadata } from "next";
 import ActivitiesClient from "./ActivitiesClient";
 
@@ -8,15 +8,11 @@ export const metadata: Metadata = {
 };
 
 export default async function ActivitiesPage() {
-  const activities = await fetchActivitiesParks();
+  const activities = getActivitiesParks().sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <main className="min-h-screen page-enter">
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Activities</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">{activities.length} activities across national parks</p>
-        </div>
         <ActivitiesClient activities={activities} />
       </div>
     </main>

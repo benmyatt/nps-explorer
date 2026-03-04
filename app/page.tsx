@@ -1,6 +1,8 @@
-import { getAllParks, fetchActivitiesParks, fetchAlerts, fetchNewsReleases } from "@/lib/nps";
+import { getAllParks, getActivitiesParks } from "@/lib/data";
+import { fetchAlerts, fetchNewsReleases } from "@/lib/nps";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import ParksList from "./ParksList";
 
 export const metadata: Metadata = {
@@ -28,23 +30,25 @@ function formatDate(dateStr: string): string {
 }
 
 export default async function HomePage() {
-  const [parks, activities, alerts, news] = await Promise.all([
-    getAllParks().catch(() => []),
-    fetchActivitiesParks().catch(() => []),
+  const parks = getAllParks();
+  const activities = getActivitiesParks();
+  const [alerts, news] = await Promise.all([
     fetchAlerts().catch(() => []),
     fetchNewsReleases().catch(() => []),
-  ] as const);
+  ]);
 
   const sortedParks = [...parks].sort((a, b) => a.fullName.localeCompare(b.fullName));
-  const heroImage = (parks.find((p) => p.parkCode === "yose") ?? parks[0])?.images[0]?.url ?? null;
+  const heroImage = (parks.find((p) => p.parkCode === "brca") ?? parks[0])?.images[0]?.url ?? null;
+  const mapImage = (parks.find((p) => p.parkCode === "yell") ?? parks[0])?.images[0]?.url ?? null;
 
+  const parkNameMap = new Map(parks.map((p) => [p.parkCode, p.fullName]));
   const recentAlerts = [...alerts]
     .sort((a, b) => {
       const da = a.lastIndexedDate ? new Date(a.lastIndexedDate).getTime() : 0;
       const db = b.lastIndexedDate ? new Date(b.lastIndexedDate).getTime() : 0;
       return db - da;
     })
-    .slice(0, 4);
+    .slice(0, 10);
 
   const recentNews = [...news]
     .sort((a, b) => {
@@ -52,18 +56,28 @@ export default async function HomePage() {
       const db = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
       return db - da;
     })
-    .slice(0, 4);
+    .slice(0, 10);
 
   return (
     <main className="min-h-screen page-enter">
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        {heroImage && (
+          <Image src={heroImage} alt="" fill priority className="object-cover" />
+        )}
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative flex items-center justify-center py-32 z-10">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white text-center">Explore America&apos;s National Parks</h1>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: "calc(100vh - 96px)" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: "calc(100vh + 200px)" }}>
           {/* Left column — All Parks */}
           <div className="rounded-xl bg-[var(--color-surface)] border border-white/5 flex flex-col overflow-hidden">
             <div className="px-4 pt-4 pb-3 shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">All Parks</h2>
-                <span className="text-xs text-[var(--color-text-muted)]">{parks.length}</span>
               </div>
             </div>
             <div className="flex-1 overflow-hidden px-4 pb-4">
@@ -77,15 +91,15 @@ export default async function HomePage() {
           </div>
 
           {/* Right column */}
-          <div className="lg:col-span-2 flex flex-col gap-4 min-h-0">
+          <div className="lg:col-span-2 flex flex-col gap-4">
             {/* Map preview */}
             <Link href="/map" className="block rounded-xl bg-[var(--color-surface)] border border-white/5 overflow-hidden relative group flex-1 min-h-[200px]">
-              {heroImage && (
-                <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              {mapImage && (
+                <Image src={mapImage} alt="" fill priority className="object-cover group-hover:scale-105 transition-transform duration-500" />
               )}
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
               <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                <h2 className="text-2xl font-bold text-white">Interactive Map</h2>
+                <h2 className="text-2xl font-bold text-white">Interactive Park Map</h2>
                 <p className="text-sm text-white/80 group-hover:text-white transition-colors mt-1">
                   View &rarr;
                 </p>
@@ -96,7 +110,7 @@ export default async function HomePage() {
             <div className="rounded-xl bg-[var(--color-surface)] border border-white/5 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">Activities</h2>
-                <Link href="/activities" className="text-xs text-[var(--color-accent)] hover:underline">View all &rarr;</Link>
+                <Link href="/activities" className="text-xs text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors">View all &rarr;</Link>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {activities.slice(0, 20).map((a) => (
@@ -125,22 +139,30 @@ export default async function HomePage() {
               <div className="rounded-xl bg-[var(--color-surface)] border border-white/5 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-semibold text-[var(--color-text)]">Alerts</h2>
-                  <Link href="/alerts" className="text-xs text-[var(--color-accent)] hover:underline">View all &rarr;</Link>
+                  <Link href="/alerts" className="text-xs text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors">View all &rarr;</Link>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {recentAlerts.map((alert) => (
-                    <Link key={alert.id} href={`/park/${alert.parkCode}`} className="block group">
-                      <div className="flex items-start gap-2">
+                    <div key={alert.id}>
+                      <Link href={`/park/${alert.parkCode}`} className="text-[10px] text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors truncate block">
+                        {parkNameMap.get(alert.parkCode) || alert.parkCode.toUpperCase()}
+                      </Link>
+                      <div className="flex items-center gap-2">
                         {alert.category && (
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${CATEGORY_STYLES[alert.category] || "bg-white/5 text-[var(--color-text-muted)]"}`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${CATEGORY_STYLES[alert.category] || "bg-white/5 text-[var(--color-text-muted)]"}`}>
                             {alert.category}
                           </span>
                         )}
-                        <p className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text)] transition-colors line-clamp-2">
+                        <p className="text-xs text-[var(--color-text-muted)] truncate flex-1 min-w-0">
                           {alert.title}
                         </p>
+                        {alert.url ? (
+                          <a href={alert.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors shrink-0">View &rarr;</a>
+                        ) : (
+                          <Link href={`/park/${alert.parkCode}`} className="text-[10px] text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors shrink-0">View &rarr;</Link>
+                        )}
                       </div>
-                    </Link>
+                    </div>
                   ))}
                   {recentAlerts.length === 0 && (
                     <p className="text-xs text-[var(--color-text-muted)]">No current alerts</p>
@@ -152,7 +174,7 @@ export default async function HomePage() {
               <div className="rounded-xl bg-[var(--color-surface)] border border-white/5 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-semibold text-[var(--color-text)]">Newsroom</h2>
-                  <Link href="/newsroom" className="text-xs text-[var(--color-accent)] hover:underline">View all &rarr;</Link>
+                  <Link href="/newsroom" className="text-xs text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors">View all &rarr;</Link>
                 </div>
                 <div className="space-y-3">
                   {recentNews.map((item) => (

@@ -9,6 +9,7 @@ interface NewsRelease {
   url: string;
   title: string;
   parkCode: string;
+  parkName: string;
   abstract: string;
   releaseDate: string;
   imageUrl: string | null;
@@ -71,9 +72,9 @@ export default function NewsList({ releases }: Props) {
               {release.parkCode && (
                 <Link
                   href={`/park/${release.parkCode}`}
-                  className="text-[10px] text-[var(--color-accent)] hover:underline uppercase tracking-wider"
+                  className="text-[10px] text-[var(--color-accent)] hover:underline tracking-wider"
                 >
-                  {release.parkCode}
+                  {release.parkName}
                 </Link>
               )}
               <a

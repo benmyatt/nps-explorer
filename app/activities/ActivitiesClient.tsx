@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ActivityPark } from "@/lib/nps";
+
 
 export default function ActivitiesClient({ activities }: { activities: ActivityPark[] }) {
   const [selected, setSelected] = useState<ActivityPark | null>(null);
@@ -10,17 +12,32 @@ export default function ActivitiesClient({ activities }: { activities: ActivityP
   if (selected) {
     return (
       <div>
-        <button
-          onClick={() => setSelected(null)}
-          className="text-sm text-[var(--color-accent)] hover:underline mb-4 flex items-center gap-1"
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <button
+              onClick={() => setSelected(null)}
+              className="text-sm text-[var(--color-accent)] hover:underline mb-4 flex items-center gap-1"
+            >
+              &larr; Back to activities
+            </button>
+            <h2 className="text-xl font-semibold text-[var(--color-text)] mb-1">{selected.name}</h2>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              {selected.parks.length} park{selected.parks.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
+        <Link
+          href={`/map?activity=${encodeURIComponent(selected.name)}`}
+          className="flex items-center justify-between p-4 rounded-xl bg-[var(--color-surface)] border border-white/5 hover:border-[var(--color-accent-dim)] transition-colors group"
         >
-          &larr; Back to activities
-        </button>
-        <h2 className="text-xl font-semibold text-[var(--color-text)] mb-1">{selected.name}</h2>
-        <p className="text-sm text-[var(--color-text-muted)] mb-4">
-          {selected.parks.length} park{selected.parks.length !== 1 ? "s" : ""}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Want to see parks with <span className="text-[var(--color-text)] font-medium">{selected.name}</span> on a map?
+          </p>
+          <span className="text-sm text-[var(--color-accent)] group-hover:underline shrink-0 ml-4">
+            View Map &rarr;
+          </span>
+        </Link>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-4">
           {selected.parks.map((park) => (
             <Link
               key={park.parkCode}
@@ -40,10 +57,13 @@ export default function ActivitiesClient({ activities }: { activities: ActivityP
   }
 
   return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">Activities</h1>
+        <p className="text-sm text-[var(--color-text-muted)]">{activities.length} activities across national parks</p>
+      </div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {activities
-        .sort((a, b) => b.parks.length - a.parks.length)
-        .map((activity) => (
+      {activities.map((activity) => (
           <button
             key={activity.id}
             onClick={() => setSelected(activity)}
@@ -55,6 +75,7 @@ export default function ActivitiesClient({ activities }: { activities: ActivityP
             </p>
           </button>
         ))}
+    </div>
     </div>
   );
 }

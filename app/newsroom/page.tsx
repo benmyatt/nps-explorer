@@ -1,4 +1,5 @@
-import { fetchNewsReleases, getAllParks } from "@/lib/nps";
+import { getParkImageMap, getAllParks } from "@/lib/data";
+import { fetchNewsReleases } from "@/lib/nps";
 import type { Metadata } from "next";
 import NewsList from "./NewsList";
 
@@ -8,15 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default async function NewsroomPage() {
-  const [rawReleases, parks] = await Promise.all([
-    fetchNewsReleases(),
-    getAllParks(),
-  ]);
-
-  const parkImages = new Map<string, string>();
-  for (const p of parks) {
-    if (p.images[0]?.url) parkImages.set(p.parkCode, p.images[0].url);
-  }
+  const parkImages = getParkImageMap();
+  const parkNameMap = new Map(getAllParks().map((p) => [p.parkCode, p.fullName]));
+  const rawReleases = await fetchNewsReleases().catch(() => [] as Awaited<ReturnType<typeof fetchNewsReleases>>);
 
   const releases = rawReleases
     .sort((a, b) => {
@@ -29,6 +24,7 @@ export default async function NewsroomPage() {
       url: r.url,
       title: r.title,
       parkCode: r.parkCode,
+      parkName: parkNameMap.get(r.parkCode) || r.parkCode.toUpperCase(),
       abstract: r.abstract,
       releaseDate: r.releaseDate,
       imageUrl: r.image?.url || parkImages.get(r.parkCode) || null,
