@@ -6,6 +6,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "NPS Park Explorer",
   description: "Explore US National Parks with an interactive map",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
