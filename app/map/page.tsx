@@ -14,7 +14,7 @@ export default async function MapPage() {
   const cgMarkers = campgroundsToMarkers(campgrounds);
 
   return (
-    <main className="relative w-screen overflow-hidden page-enter" style={{ height: "calc(100vh - 48px)" }}>
+    <main className="relative w-full overflow-hidden page-enter" style={{ height: "calc(100dvh - 48px)" }}>
       <HomeMap parkMarkers={markers} campgroundMarkers={cgMarkers} />
     </main>
   );

@@ -75,62 +75,64 @@ export default function MapLegend({ designationFilter, onDesignationChange, acti
   return (
     <div className="relative">
       {/* Primary filter bar */}
-      <div className="w-full bg-[var(--color-bg)]/80 backdrop-blur border-b border-white/5 px-2 lg:px-4 py-1.5 flex items-center justify-center gap-1 lg:gap-2">
-        <span className="text-[8px] lg:text-xs text-[var(--color-text-muted)] shrink-0">Click to filter by:</span>
+      <div className="w-full bg-[var(--color-bg)]/80 backdrop-blur border-b border-white/5 px-3 lg:px-4 py-2 lg:py-1.5 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-1.5 sm:gap-2">
+        <span className="text-xs text-[var(--color-text-muted)] shrink-0">Filter by:</span>
 
-        {/* Park Designation */}
-        <button
-          onClick={handleDesignationClick}
-          className={`shrink-0 text-[8px] lg:text-xs px-2 lg:px-3 py-0.5 lg:py-1 rounded-full transition-all ${
-            designationOpen || designationFilter
-              ? "bg-white/10 text-[var(--color-text)] font-medium ring-1 ring-white/20"
-              : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
-          }`}
-        >
-          Park Designation
-        </button>
-
-        {/* Activities */}
-        <button
-          onClick={handleActivityClick}
-          className={`shrink-0 text-[8px] lg:text-xs px-2 lg:px-3 py-0.5 lg:py-1 rounded-full transition-all flex items-center gap-1 ${
-            megaOpen || activityFilter
-              ? "bg-white/10 text-[var(--color-text)] font-medium ring-1 ring-white/20"
-              : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
-          }`}
-        >
-          Activities
-          <svg className="h-2 w-2 lg:h-3 lg:w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d={megaOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
-          </svg>
-        </button>
-
-        {/* Campgrounds */}
-        <button
-          onClick={handleCampgroundClick}
-          className={`shrink-0 text-[8px] lg:text-xs px-2 lg:px-3 py-0.5 lg:py-1 rounded-full transition-all ${
-            mode === "campgrounds"
-              ? "bg-white/20 text-white font-medium ring-1 ring-white/30"
-              : "text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text)]"
-          }`}
-        >
-          Campgrounds
-        </button>
-
-        {/* Clear — only element that appears/disappears, positioned after the last button so nothing shifts */}
-        {hasAnyFilter && (
+        <div className="flex items-center gap-2">
+          {/* Park Designation */}
           <button
-            onClick={clearAll}
-            className="text-[8px] lg:text-xs text-[var(--color-accent)] hover:underline shrink-0 whitespace-nowrap"
+            onClick={handleDesignationClick}
+            className={`shrink-0 text-xs px-3 py-1.5 rounded-full transition-all ${
+              designationOpen || designationFilter
+                ? "bg-white/15 text-[var(--color-text)] font-medium ring-1 ring-white/20"
+                : "bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10 hover:text-[var(--color-text)]"
+            }`}
           >
-            Clear
+            Designation
           </button>
-        )}
+
+          {/* Activities */}
+          <button
+            onClick={handleActivityClick}
+            className={`shrink-0 text-xs px-3 py-1.5 rounded-full transition-all flex items-center gap-1 ${
+              megaOpen || activityFilter
+                ? "bg-white/15 text-[var(--color-text)] font-medium ring-1 ring-white/20"
+                : "bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10 hover:text-[var(--color-text)]"
+            }`}
+          >
+            Activities
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={megaOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
+            </svg>
+          </button>
+
+          {/* Campgrounds */}
+          <button
+            onClick={handleCampgroundClick}
+            className={`shrink-0 text-xs px-3 py-1.5 rounded-full transition-all ${
+              mode === "campgrounds"
+                ? "bg-white/20 text-white font-medium ring-1 ring-white/30"
+                : "bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10 hover:text-[var(--color-text)]"
+            }`}
+          >
+            Campgrounds
+          </button>
+
+          {/* Clear */}
+          {hasAnyFilter && (
+            <button
+              onClick={clearAll}
+              className="text-xs text-[var(--color-accent)] hover:underline shrink-0 whitespace-nowrap"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Designation pills row */}
       {designationOpen && (
-        <div className="w-full bg-[var(--color-bg)]/80 backdrop-blur border-b border-white/5 px-2 lg:px-4 py-1.5 flex items-center justify-center gap-px lg:gap-1 overflow-x-auto scrollbar-hide">
+        <div className="w-full bg-[var(--color-bg)]/80 backdrop-blur border-b border-white/5 px-3 lg:px-4 py-2 lg:py-1.5 flex flex-wrap sm:justify-center gap-1.5 lg:gap-1">
           {LEGEND_ITEMS.map(({ label, color, key }) => {
             const active = designationFilter === key;
             const dimmed = designationFilter !== null && !active;
@@ -138,19 +140,19 @@ export default function MapLegend({ designationFilter, onDesignationChange, acti
               <button
                 key={key}
                 onClick={() => onDesignationChange(active ? null : key)}
-                className={`flex items-center gap-0.5 lg:gap-1.5 shrink-0 px-1.5 lg:px-2.5 py-0.5 lg:py-1 rounded-full transition-all ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:py-1 rounded-full transition-all ${
                   active
                     ? "bg-white/10 ring-1 ring-white/20"
                     : dimmed
                       ? "opacity-40 hover:opacity-70"
-                      : "hover:bg-white/5"
+                      : "bg-white/5 hover:bg-white/10"
                 }`}
               >
                 <span
-                  className="h-1.5 w-1.5 lg:h-2.5 lg:w-2.5 rounded-full"
+                  className="h-2 w-2 lg:h-2.5 lg:w-2.5 rounded-full"
                   style={{ backgroundColor: color }}
                 />
-                <span className="text-[8px] lg:text-xs text-[var(--color-text-muted)] whitespace-nowrap">{label}</span>
+                <span className="text-[11px] lg:text-xs text-[var(--color-text-muted)] whitespace-nowrap">{label}</span>
               </button>
             );
           })}

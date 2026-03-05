@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import USMap from "@/components/USMap";
 import MapLegend, { type MapMode, LEGEND_ITEMS } from "@/components/MapLegend";
@@ -18,6 +18,26 @@ export default function HomeMap({ parkMarkers, campgroundMarkers = [] }: Props) 
   const [designationFilter, setDesignationFilter] = useState<string | null>(null);
   const [activityFilter, setActivityFilter] = useState<string | null>(initialActivity);
   const [mode, setMode] = useState<MapMode>("parks");
+  const [showPinchHint, setShowPinchHint] = useState(false);
+
+  useEffect(() => {
+    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+    if (isTouchDevice && !localStorage.getItem("pinchHintDismissed")) {
+      setShowPinchHint(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!showPinchHint) return;
+    function handleTouch(e: TouchEvent) {
+      if (e.touches.length >= 2) {
+        setShowPinchHint(false);
+        localStorage.setItem("pinchHintDismissed", "1");
+      }
+    }
+    window.addEventListener("touchmove", handleTouch);
+    return () => window.removeEventListener("touchmove", handleTouch);
+  }, [showPinchHint]);
 
   const filtered = useMemo(() => {
     return parkMarkers.filter((p) => {
@@ -58,9 +78,20 @@ export default function HomeMap({ parkMarkers, campgroundMarkers = [] }: Props) 
         />
       </div>
 
-      <div className="absolute bottom-6 inset-x-0 text-center z-10">
+      <div className="absolute bottom-4 inset-x-0 z-10 flex flex-col items-center gap-2">
+        {showPinchHint && (
+          <div className="animate-pulse">
+            <div className="inline-flex items-center gap-2 bg-[var(--color-bg)]/90 backdrop-blur px-4 py-2 rounded-full">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/60">
+                <path d="M6 12L6 4M18 12L18 4M6 12C6 12 2 14 2 17M18 12C18 12 22 14 22 17M9 1L9 3M15 1L15 3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-xs text-white/60">Pinch to zoom</span>
+            </div>
+          </div>
+        )}
+
         <div className="inline-block bg-[var(--color-bg)]/80 backdrop-blur px-4 py-2 rounded-full">
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <p className="text-xs sm:text-sm text-[var(--color-text-muted)]">
             {mode === "campgrounds" ? (
               <>Showing all Campgrounds</>
             ) : designationFilter && activityFilter ? (
@@ -70,7 +101,7 @@ export default function HomeMap({ parkMarkers, campgroundMarkers = [] }: Props) 
             ) : activityFilter ? (
               <>Showing all parks with &ldquo;{activityFilter}&rdquo;</>
             ) : (
-              <>Click a state to explore</>
+              <>Tap a state to explore</>
             )}
           </p>
           {designationFilter && !activityFilter && (

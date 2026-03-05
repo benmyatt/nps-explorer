@@ -15,9 +15,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen antialiased">
+      <body className="min-h-screen antialiased flex flex-col">
         <SiteNav />
-        {children}
+        <div className="flex-1">
+          {children}
+        </div>
         <SiteFooter />
       </body>
     </html>

@@ -59,19 +59,19 @@ export default async function HomePage() {
     .slice(0, 10);
 
   return (
-    <main className="min-h-screen page-enter">
+    <main className="page-enter">
       {/* Hero */}
       <div className="relative overflow-hidden">
         {heroImage && (
           <Image src={heroImage} alt="" fill priority className="object-cover" />
         )}
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative flex items-center justify-center py-32 z-10">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white text-center">Explore America&apos;s National Parks</h1>
+        <div className="absolute inset-0 bg-black/30 sm:bg-black/50" />
+        <div className="relative flex items-center justify-center py-16 sm:py-32 z-10">
+          <h1 className="text-2xl sm:text-5xl font-bold text-white text-center px-6">Explore America&apos;s National Parks</h1>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 pb-[136px] sm:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: "calc(100vh + 200px)" }}>
           {/* Left column — All Parks */}
           <div className="rounded-xl bg-[var(--color-surface)] border border-white/5 flex flex-col overflow-hidden">
