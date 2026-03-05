@@ -7,7 +7,6 @@ import StateMap from "@/components/StateMap";
 import ParkCard from "@/components/ParkCard";
 import CampgroundCard from "@/components/CampgroundCard";
 import BackLink from "@/components/BackLink";
-import ResetZoom from "@/components/ResetZoom";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -57,7 +56,6 @@ export default async function StatePage({ params, searchParams }: Props) {
 
   return (
     <main className="min-h-screen page-enter">
-      <ResetZoom />
       {/* Header */}
       <header className="sticky top-12 z-20 bg-[var(--color-bg)]/90 backdrop-blur border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">

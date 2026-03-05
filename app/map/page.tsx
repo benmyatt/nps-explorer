@@ -1,5 +1,6 @@
 import { getAllParks, parksToMarkers, getAllCampgrounds, campgroundsToMarkers } from "@/lib/data";
 import HomeMap from "@/components/HomeMap";
+import UnlockZoom from "@/components/ResetZoom";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default async function MapPage() {
 
   return (
     <main className="relative w-full overflow-hidden page-enter" style={{ height: "calc(100dvh - 48px)" }}>
+      <UnlockZoom />
       <HomeMap parkMarkers={markers} campgroundMarkers={cgMarkers} />
     </main>
   );
