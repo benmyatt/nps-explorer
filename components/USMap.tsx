@@ -36,7 +36,7 @@ export default function USMap({ parkMarkers, campgroundMarkers = [], mode = "par
       const stateCode = FIPS_TO_STATE[geo.id];
       if (stateCode) {
         const url = mode === "campgrounds" ? `/state/${stateCode}?view=campgrounds` : `/state/${stateCode}`;
-        router.push(url);
+        window.location.href = url;
       }
     },
     [router, mode]
@@ -147,7 +147,7 @@ export default function USMap({ parkMarkers, campgroundMarkers = [], mode = "par
               <g
                 key={park.parkCode}
                 transform={`translate(${park.x}, ${park.y})`}
-                onClick={() => router.push(`/park/${park.parkCode}`)}
+                onClick={() => { window.location.href = `/park/${park.parkCode}`; }}
                 onMouseEnter={() => router.prefetch(`/park/${park.parkCode}`)}
                 onMouseMove={(e) => handleMouseMove(e, park.name)}
                 onMouseLeave={handleMouseLeave}
@@ -176,7 +176,7 @@ export default function USMap({ parkMarkers, campgroundMarkers = [], mode = "par
             <g
               key={cg.id}
               transform={`translate(${cg.x}, ${cg.y})`}
-              onClick={() => router.push(`/campground/${cg.id}`)}
+              onClick={() => { window.location.href = `/campground/${cg.id}`; }}
               onMouseEnter={() => router.prefetch(`/campground/${cg.id}`)}
               onMouseMove={(e) => handleMouseMove(e, cg.name)}
               onMouseLeave={handleMouseLeave}
