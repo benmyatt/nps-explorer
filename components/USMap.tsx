@@ -31,31 +31,15 @@ export default function USMap({ parkMarkers, campgroundMarkers = [], mode = "par
     y: number;
   } | null>(null);
 
-  const resetZoomAndNavigate = useCallback(
-    (url: string) => {
-      const viewport = document.querySelector('meta[name="viewport"]');
-      if (viewport) {
-        viewport.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1");
-        requestAnimationFrame(() => {
-          viewport.setAttribute("content", "width=device-width, initial-scale=1");
-          router.push(url);
-        });
-      } else {
-        router.push(url);
-      }
-    },
-    [router]
-  );
-
   const handleStateClick = useCallback(
     (geo: { id: string }) => {
       const stateCode = FIPS_TO_STATE[geo.id];
       if (stateCode) {
         const url = mode === "campgrounds" ? `/state/${stateCode}?view=campgrounds` : `/state/${stateCode}`;
-        resetZoomAndNavigate(url);
+        router.push(url);
       }
     },
-    [mode, resetZoomAndNavigate]
+    [router, mode]
   );
 
   const handleMouseMove = useCallback(
@@ -163,7 +147,7 @@ export default function USMap({ parkMarkers, campgroundMarkers = [], mode = "par
               <g
                 key={park.parkCode}
                 transform={`translate(${park.x}, ${park.y})`}
-                onClick={() => resetZoomAndNavigate(`/park/${park.parkCode}`)}
+                onClick={() => router.push(`/park/${park.parkCode}`)}
                 onMouseEnter={() => router.prefetch(`/park/${park.parkCode}`)}
                 onMouseMove={(e) => handleMouseMove(e, park.name)}
                 onMouseLeave={handleMouseLeave}
@@ -192,7 +176,7 @@ export default function USMap({ parkMarkers, campgroundMarkers = [], mode = "par
             <g
               key={cg.id}
               transform={`translate(${cg.x}, ${cg.y})`}
-              onClick={() => resetZoomAndNavigate(`/campground/${cg.id}`)}
+              onClick={() => router.push(`/campground/${cg.id}`)}
               onMouseEnter={() => router.prefetch(`/campground/${cg.id}`)}
               onMouseMove={(e) => handleMouseMove(e, cg.name)}
               onMouseLeave={handleMouseLeave}
